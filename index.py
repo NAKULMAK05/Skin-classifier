@@ -22,7 +22,7 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load your models (update the paths if needed)
-segmentation_model = tf.keras.models.load_model("segmentation_model (2).keras")
+segmentation_model = tf.keras.models.load_model("segmentation_model_final.keras")
 classification_model = tf.keras.models.load_model("not_overfitting_final.keras")
 nlp_model = joblib.load("path_to_trained_model.pkl")
 

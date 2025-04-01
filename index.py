@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import joblib
+import requests  # For calling the Gemini API
 
 # Initialize the Flask app and set the allowed frontend domain.
 app = Flask(__name__)
@@ -29,12 +30,49 @@ nlp_model = joblib.load("path_to_trained_model.pkl")
 # Define class labels for the CNN classifier
 CLASS_LABELS = ['bkl', 'nv', 'df', 'mel', 'vasc', 'bcc', 'akiec']
 
+# Set your Gemini API key and URL (update with your actual credentials)
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+GEMINI_API_URL = "https://api.gemini.example.com/recommend"  # Update with the real URL
+
 @app.after_request
 def add_cors_headers(response):
     response.headers.add("Access-Control-Allow-Origin", allowed_origin)
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
     response.headers.add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
     return response
+
+def get_gemini_recommendations(payload):
+    """
+    Call the Gemini API with a prompt built from the provided payload.
+    """
+    prompt = (
+        f"Based on the following skin lesion prediction and metadata:\n"
+        f"CNN Prediction: {payload.get('cnn_output')}\n"
+        f"NLP Prediction: {payload.get('nlp_output')}\n"
+        f"Final Classification: {payload.get('final_output')}\n"
+        f"Additional Details: {payload.get('additional_details', {})}\n\n"
+        "Provide recommendations regarding further steps, "
+        "such as whether to consult a specialist and any suggested actions."
+    )
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GEMINI_API_KEY}"
+    }
+    data = {
+        "prompt": prompt,
+        "max_tokens": 150  # Adjust as necessary
+    }
+    
+    try:
+        response = requests.post(GEMINI_API_URL, json=data, headers=headers)
+        response.raise_for_status()
+        result = response.json()
+        # Assuming the response contains a field 'recommendation'
+        return result.get("recommendation", "No recommendation provided.")
+    except Exception as e:
+        print("Error calling Gemini API:", e)
+        return "Error retrieving recommendations."
 
 @app.route("/predict", methods=["POST", "OPTIONS"])
 @cross_origin(origins=allowed_origin)
@@ -142,14 +180,77 @@ def predict():
         segmentation_output = "U-Net Segmentation Applied"
         final_output = f"This disease is most probably classified as: {final_label}"
 
+        # 13) Prepare payload for Gemini recommendation system
+        gemini_payload = {
+            "cnn_output": cnn_output,
+            "nlp_output": nlp_output,
+            "final_output": final_output,
+            "additional_details": {
+                "dx_type": dx_type,
+                "age": age,
+                "sex": sex,
+                "localization": localization,
+                "all_class_probabilities": all_class_probs_str
+            }
+        }
+
+        # 14) Call the Gemini API for recommendations
+        gemini_recommendation = get_gemini_recommendations(gemini_payload)
+
         return jsonify({
             "plot_image": f"data:image/png;base64,{plot_image_base64}",
             "cnn_output": cnn_output,
             "all_class_probabilities": all_class_probs_str,
             "nlp_output": nlp_output,
             "segmentation_output": segmentation_output,
-            "final_output": final_output
+            "final_output": final_output,
+            "gemini_recommendation": gemini_recommendation
         })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/chat", methods=["POST", "OPTIONS"])
+@cross_origin(origins=allowed_origin)
+def chat():
+    # Handle preflight OPTIONS request for the chat endpoint
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        response.headers["Access-Control-Allow-Origin"] = allowed_origin
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+        return response
+
+    try:
+        data = request.get_json()
+        if not data or "message" not in data:
+            return jsonify({"error": "No message provided"}), 400
+
+        user_message = data["message"]
+
+        # Build a prompt for the Gemini-based chatbot.
+        # In this example, we set it up as a helpful dermatologist assistant.
+        prompt = (
+            f"You are a knowledgeable dermatologist assistant. "
+            f"The user asks: \"{user_message}\". "
+            "Please provide a concise, informative answer with medical insights and recommendations."
+        )
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {GEMINI_API_KEY}"
+        }
+        payload = {
+            "prompt": prompt,
+            "max_tokens": 150  # Adjust the token limit as needed
+        }
+
+        response = requests.post(GEMINI_API_URL, json=payload, headers=headers)
+        response.raise_for_status()
+        result = response.json()
+        # Assuming Gemini's API returns a field called 'recommendation' as the chatbot reply.
+        chat_reply = result.get("recommendation", "No answer provided.")
+        return jsonify({"reply": chat_reply})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

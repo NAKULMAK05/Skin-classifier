@@ -21,8 +21,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Cache the model loading so that they're loaded only once per session
 @st.cache_resource
 def load_models():
-    segmentation_model = tf.keras.models.load_model("segmentation_model_final.keras")
-    classification_model = tf.keras.models.load_model("not_overfitting_final.keras")
+    segmentation_model = tf.keras.models.load_model("ap1_segmentation_model_final.keras")
+    classification_model = tf.keras.models.load_model("classification_model_new_keras_ap1.keras")
     nlp_model = joblib.load("path_to_trained_model.pkl")
     return segmentation_model, classification_model, nlp_model
 

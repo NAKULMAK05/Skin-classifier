@@ -130,9 +130,9 @@ CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-SEG_MODEL_PATH = "ap1_segmentation_model_final.keras"
-CLS_MODEL_PATH = "classification_model_new_keras_ap1.keras"
-NLP_MODEL_PATH = "path_to_trained_model.pkl"
+SEG_MODEL_PATH = "./ap1_segmentation_model_final.keras"
+CLS_MODEL_PATH = "./classification_model_new_keras_ap1.keras"
+NLP_MODEL_PATH = "./path_to_trained_model.pkl"
 CLASS_NAMES = ['bkl', 'nv', 'df', 'mel', 'vasc', 'bcc', 'akiec']
 
 combined_model = CombinedModel(SEG_MODEL_PATH, CLS_MODEL_PATH, NLP_MODEL_PATH, CLASS_NAMES)

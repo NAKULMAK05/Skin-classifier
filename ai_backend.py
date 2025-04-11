@@ -131,7 +131,7 @@ NLP_MODEL_PATH = r"C:/Users/HP/Downloads/path_to_trained_model.pkl"
 CLASS_NAMES = ['bkl', 'nv', 'df', 'mel', 'vasc', 'bcc', 'akiec']
 
 # Gemini API key placeholder - insert your actual key here.
-GEMINI_API_KEY = "AIzaSyDicwrWgGI6An8fVs8WmmUhMS0Wz2kNjiY"
+GEMINI_API_KEY = "Gemini API key"
 
 combined_model = CombinedModel(SEG_MODEL_PATH, CLS_MODEL_PATH, NLP_MODEL_PATH, CLASS_NAMES)
 
@@ -142,7 +142,7 @@ def get_gemini_response(messages):
     """
     # Example payload structure; modify according to Gemini API documentation.
     payload = {
-        "api_key": "AIzaSyDicwrWgGI6An8fVs8WmmUhMS0Wz2kNjiY",
+        "api_key": "Gemini Key",
         "messages": messages
     }
     # Replace with the actual Gemini API endpoint URL

@@ -11,9 +11,7 @@ import joblib
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
-import dotenv 
 
-# --- CombinedModel class definition ---
 # --- Flask App Setup ---
 app = Flask(__name__)
 # Configure CORS to allow requests only from your frontend

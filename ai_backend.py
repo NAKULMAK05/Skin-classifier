@@ -12,7 +12,6 @@ import requests  # For making API calls to Gemini
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
-import sklearn from scikit-learn
 
 # --- CombinedModel class definition ---
 class CombinedModel:
